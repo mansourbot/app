@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cards Against Reality — Beta</title>
+  <style>
+    :root {
+      --bg: #0f0f13;
+      --panel: #191924;
+      --muted: #9b9bb3;
+      --text: #f5f5ff;
+      --accent: #7c5cff;
+      --good: #18c37e;
+      --bad: #ff5370;
+      --card-w: 220px;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1200px 600px at 20% -20%, #2b2b5a44, transparent), var(--bg);
+      color: var(--text);
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    .title { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+    .title h1 { margin: 0; font-size: 28px; }
+    .subtitle { color: var(--muted); margin-bottom: 22px; }
+    .panel {
+      background: var(--panel);
+      border: 1px solid #ffffff14;
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; }
+    input, textarea, button, select {
+      border-radius: 10px;
+      border: 1px solid #ffffff22;
+      background: #11111a;
+      color: var(--text);
+      padding: 10px 12px;
+      font: inherit;
+    }
+    input, textarea { width: 100%; }
+    textarea { min-height: 76px; resize: vertical; }
+    button { cursor: pointer; background: #23233a; }
+    button.primary { background: var(--accent); border-color: #9c86ff; font-weight: 700; }
+    button.ghost { background: transparent; }
+    button.good { background: var(--good); border-color: #36d598; color: #062516; font-weight: 700; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+    @media (min-width: 900px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .pill { display: inline-flex; gap: 6px; align-items: center; padding: 6px 10px; border-radius: 999px; background: #ffffff12; font-size: 13px; }
+    .cards { display: flex; flex-wrap: wrap; gap: 10px; }
+    .card {
+      width: var(--card-w);
+      min-height: 150px;
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border: 1px solid #ffffff2a;
+    }
+    .black { background: #0a0a0f; }
+    .white { background: #fff; color: #0e0e12; border-color: #d9d9e6; }
+    .card .tag { font-size: 12px; opacity: 0.7; }
+    .card p { margin: 0; white-space: pre-wrap; font-weight: 600; }
+
+    .pickable { cursor: pointer; transition: transform .12s ease, box-shadow .12s ease; }
+    .pickable:hover { transform: translateY(-3px); }
+    .selected { outline: 3px solid var(--accent); box-shadow: 0 0 0 4px #7c5cff33; }
+    .winner { outline: 3px solid var(--good); box-shadow: 0 0 0 4px #18c37e33; }
+
+    .scoreboard { display: flex; flex-wrap: wrap; gap: 8px; }
+    .score {
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: #ffffff10;
+      font-size: 14px;
+    }
+    .judge { border: 1px solid #ffd16688; }
+    .hidden { display: none !important; }
+    .small { font-size: 13px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title">
+      <h1>Cards Against Reality — Beta</h1>
+      <span class="pill">unhinged mode prototype</span>
+    </div>
+    <div class="subtitle">Fast local multiplayer. One device for now. Built to validate the game loop.</div>
+
+    <section id="setup" class="panel">
+      <h3>1) Set up game</h3>
+      <div class="row">
+        <div style="flex:2; min-width:260px">
+          <label class="small">Player names (comma separated)</label>
+          <input id="playersInput" placeholder="Hank, Pat, Mansour" value="Hank, Pat, Mansour" />
+        </div>
+        <div style="flex:1; min-width:180px">
+          <label class="small">Play to points</label>
+          <select id="pointsToWin">
+            <option>5</option>
+            <option selected>7</option>
+            <option>10</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:10px">
+        <label class="small">Group vibe / inside jokes prompt</label>
+        <textarea id="vibeInput" placeholder="Toronto startup chaos, coffee addiction, fantasy football, terrible sleep schedules"></textarea>
+      </div>
+
+      <div style="margin-top:10px" class="row">
+        <button id="startBtn" class="primary">Start beta match</button>
+      </div>
+      <div class="small" style="margin-top:10px">Tip: Type your real inside jokes above. This beta mutates card text from that vibe.</div>
+    </section>
+
+    <section id="game" class="hidden">
+      <div class="panel">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <div>
+            <div id="roundInfo" class="pill"></div>
+            <h2 id="blackPrompt" style="margin:10px 0 0 0"></h2>
+          </div>
+          <div>
+            <button id="nextRoundBtn" class="ghost hidden">Next round</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="panel">
+          <h3>Scoreboard</h3>
+          <div id="scoreboard" class="scoreboard"></div>
+          <div id="winnerBanner" class="hidden" style="margin-top:14px; font-weight:800; color: var(--good);"></div>
+        </div>
+
+        <div class="panel">
+          <h3>Current turn</h3>
+          <div id="turnState"></div>
+          <div id="handWrap" class="hidden" style="margin-top:10px;">
+            <p class="small">Pick your best (worst) card:</p>
+            <div id="hand" class="cards"></div>
+            <button id="submitPlayBtn" class="primary" disabled style="margin-top:10px">Lock this disaster in</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="playsPanel" class="panel hidden">
+        <h3>Submitted cards (judge picks winner)</h3>
+        <div id="submittedCards" class="cards"></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const BLACK_TEMPLATES = [
+      "My 2026 holiday party was ruined by ____.",
+      "The secret to startup success? ____ and absolutely no sleep.",
+      "At 2AM in the group chat, someone suggested ____.",
+      "HR says we can no longer celebrate with ____.",
+      "Instead of bonuses this year, everyone gets ____.",
+      "Our growth strategy is basically ____.",
+      "I left my job to go all-in on ____.",
+      "Family dinner ended when grandma mentioned ____.",
+      "The pitch deck was perfect until slide 8: ____.",
+      "This product has one killer feature: ____."
+    ];
+
+    const WHITE_BASE = [
+      "an AI intern with villain energy",
+      "accidentally going viral on LinkedIn",
+      "a cursed Notion template",
+      "aggressive overconfidence",
+      "three espresso shots and bad judgment",
+      "a Slack channel called #unhinged-ideas",
+      "a soft launch that became a hard panic",
+      "outsourcing to my future self",
+      "main-character syndrome",
+      "a spreadsheet no one understands",
+      "therapeutic chaos",
+      "a pivot so sharp it broke reality",
+      "funding secured by pure delusion",
+      "an all-hands meeting with no hands",
+      "shipping first, apologizing never",
+      "the intern's suspiciously perfect plan",
+      "a midnight rebrand",
+      "business astrology",
+      "an investor who only speaks in memes",
+      "a product roadmap drawn on a napkin"
+    ];
+
+    const state = {
+      players: [],
+      scores: {},
+      judgeIndex: 0,
+      round: 1,
+      currentBlack: "",
+      hands: {},
+      submitted: {},
+      selectedCard: null,
+      activePlayerIndex: 0,
+      pointsToWin: 7,
+      vibeTokens: []
+    };
+
+    const setupEl = document.getElementById('setup');
+    const gameEl = document.getElementById('game');
+    const startBtn = document.getElementById('startBtn');
+    const nextRoundBtn = document.getElementById('nextRoundBtn');
+
+    const playersInput = document.getElementById('playersInput');
+    const vibeInput = document.getElementById('vibeInput');
+    const pointsToWinInput = document.getElementById('pointsToWin');
+
+    const roundInfo = document.getElementById('roundInfo');
+    const blackPrompt = document.getElementById('blackPrompt');
+    const scoreboard = document.getElementById('scoreboard');
+    const turnState = document.getElementById('turnState');
+    const handWrap = document.getElementById('handWrap');
+    const hand = document.getElementById('hand');
+    const submitPlayBtn = document.getElementById('submitPlayBtn');
+    const playsPanel = document.getElementById('playsPanel');
+    const submittedCards = document.getElementById('submittedCards');
+    const winnerBanner = document.getElementById('winnerBanner');
+
+    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+    function vibeWords(str) {
+      return str
+        .toLowerCase()
+        .replace(/[^a-z0-9,\s-]/g, '')
+        .split(/[\s,]+/)
+        .filter(w => w.length > 3)
+        .slice(0, 25);
+    }
+
+    function generateWhiteDeck() {
+      const custom = state.vibeTokens.map(w => {
+        const templates = [
+          `an unhealthy obsession with ${w}`,
+          `${w}, but make it a business model`,
+          `a 47-minute rant about ${w}`,
+          `a black-market stash of ${w}`,
+          `${w} at absolutely the wrong time`
+        ];
+        return pick(templates);
+      });
+      return shuffle([...WHITE_BASE, ...custom]);
+    }
+
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function dealHands() {
+      const deck = generateWhiteDeck();
+      state.players.forEach((p, idx) => {
+        if (idx === state.judgeIndex) return;
+        state.hands[p] = [];
+        while (state.hands[p].length < 7) {
+          state.hands[p].push(deck.pop() || pick(WHITE_BASE));
+        }
+      });
+    }
+
+    function setRound() {
+      state.currentBlack = pick(BLACK_TEMPLATES);
+      state.submitted = {};
+      state.selectedCard = null;
+      const judge = state.players[state.judgeIndex];
+      state.activePlayerIndex = state.players.findIndex((p, idx) => idx !== state.judgeIndex);
+      roundInfo.textContent = `Round ${state.round} • Judge: ${judge}`;
+      blackPrompt.textContent = state.currentBlack;
+      nextRoundBtn.classList.add('hidden');
+      playsPanel.classList.add('hidden');
+      submittedCards.innerHTML = '';
+      renderScoreboard();
+      renderTurn();
+    }
+
+    function renderScoreboard() {
+      scoreboard.innerHTML = '';
+      const judge = state.players[state.judgeIndex];
+      state.players.forEach(p => {
+        const el = document.createElement('div');
+        el.className = 'score' + (p === judge ? ' judge' : '');
+        el.textContent = `${p}: ${state.scores[p] || 0}${p === judge ? ' (judge)' : ''}`;
+        scoreboard.appendChild(el);
+      });
+    }
+
+    function renderTurn() {
+      const judge = state.players[state.judgeIndex];
+      const notJudge = state.players.filter(p => p !== judge);
+
+      if (Object.keys(state.submitted).length === notJudge.length) {
+        turnState.innerHTML = `<p><b>All cards submitted.</b> Hand phone to judge <b>${judge}</b> and pick the winner.</p>`;
+        handWrap.classList.add('hidden');
+        renderSubmittedForJudge();
+        return;
+      }
+
+      const currentPlayer = state.players[state.activePlayerIndex];
+      if (currentPlayer === judge || state.submitted[currentPlayer]) {
+        advanceToNextPlayer();
+        return;
+      }
+
+      turnState.innerHTML = `<p>Current player: <b>${currentPlayer}</b> (judge is ${judge}). Pick 1 card.</p>`;
+      handWrap.classList.remove('hidden');
+      renderHand(currentPlayer);
+    }
+
+    function renderHand(player) {
+      hand.innerHTML = '';
+      submitPlayBtn.disabled = true;
+      state.selectedCard = null;
+
+      const cards = state.hands[player] || [];
+      cards.forEach((text, idx) => {
+        const card = document.createElement('div');
+        card.className = 'card white pickable';
+        card.innerHTML = `<p>${text}</p><div class="tag">white card</div>`;
+        card.onclick = () => {
+          [...hand.children].forEach(c => c.classList.remove('selected'));
+          card.classList.add('selected');
+          state.selectedCard = { idx, text, player };
+          submitPlayBtn.disabled = false;
+        };
+        hand.appendChild(card);
+      });
+    }
+
+    function advanceToNextPlayer() {
+      for (let i = 0; i < state.players.length; i++) {
+        state.activePlayerIndex = (state.activePlayerIndex + 1) % state.players.length;
+        const p = state.players[state.activePlayerIndex];
+        const judge = state.players[state.judgeIndex];
+        if (p !== judge && !state.submitted[p]) {
+          renderTurn();
+          return;
+        }
+      }
+      renderTurn();
+    }
+
+    function submitPlay() {
+      if (!state.selectedCard) return;
+      const { player, text, idx } = state.selectedCard;
+      state.submitted[player] = text;
+      state.hands[player].splice(idx, 1);
+      state.hands[player].push(pick(WHITE_BASE));
+      state.selectedCard = null;
+      submitPlayBtn.disabled = true;
+      advanceToNextPlayer();
+    }
+
+    function renderSubmittedForJudge() {
+      playsPanel.classList.remove('hidden');
+      submittedCards.innerHTML = '';
+      turnState.innerHTML = `<p><b>Judge time.</b> Tap the winning card.</p>`;
+
+      const entries = shuffle(Object.entries(state.submitted));
+      entries.forEach(([player, text]) => {
+        const card = document.createElement('div');
+        card.className = 'card white pickable';
+        card.innerHTML = `<p>${text}</p><div class="tag">submitted card</div>`;
+        card.onclick = () => chooseWinner(player, card);
+        submittedCards.appendChild(card);
+      });
+    }
+
+    function chooseWinner(player, cardEl) {
+      [...submittedCards.children].forEach(c => c.classList.remove('winner'));
+      cardEl.classList.add('winner');
+      state.scores[player] = (state.scores[player] || 0) + 1;
+
+      renderScoreboard();
+
+      if (state.scores[player] >= state.pointsToWin) {
+        winnerBanner.textContent = `🏆 ${player} wins the match. Beautifully unwell energy.`;
+        winnerBanner.classList.remove('hidden');
+        turnState.innerHTML = `<p><b>Game over.</b> Start a fresh match for more chaos.</p>`;
+        nextRoundBtn.classList.add('hidden');
+        handWrap.classList.add('hidden');
+        return;
+      }
+
+      winnerBanner.classList.add('hidden');
+      turnState.innerHTML = `<p><b>${player}</b> wins the round. Rotate judge and continue.</p>`;
+      nextRoundBtn.classList.remove('hidden');
+      handWrap.classList.add('hidden');
+    }
+
+    function nextRound() {
+      state.round += 1;
+      state.judgeIndex = (state.judgeIndex + 1) % state.players.length;
+      setRound();
+    }
+
+    function startGame() {
+      const players = playersInput.value
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      if (players.length < 3) {
+        alert('Need at least 3 players.');
+        return;
+      }
+
+      state.players = players;
+      state.pointsToWin = Number(pointsToWinInput.value || 7);
+      state.vibeTokens = vibeWords(vibeInput.value);
+      state.round = 1;
+      state.judgeIndex = Math.floor(Math.random() * players.length);
+      state.scores = {};
+      players.forEach(p => state.scores[p] = 0);
+
+      dealHands();
+      setRound();
+
+      setupEl.classList.add('hidden');
+      gameEl.classList.remove('hidden');
+    }
+
+    startBtn.onclick = startGame;
+    submitPlayBtn.onclick = submitPlay;
+    nextRoundBtn.onclick = nextRound;
+  </script>
+</body>
+</html>
