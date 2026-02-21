@@ -1,33 +1,25 @@
-# Cards Against Reality — Beta v0.1
+# Cards Against Reality — Pack Design Studio Beta
 
-First playable single-device beta for validating game loop and humor quality.
+This prototype is now **studio-first** (not live multiplayer-first).
+
+## What it does
+- Helps a solo creator define a custom pack brief
+- Generates 3 theme directions
+- Generates prompt cards (black) + response cards (white)
+- Supports pack sizing:
+  - Mini: 20 + 60
+  - Standard: 30 + 90
+  - Deluxe: 40 + 120
+- Exports pack as JSON (print/PDF export next)
 
 ## Run
+```bash
+cd app
+python3 -m http.server 8080
+```
+Open: http://localhost:8080
 
-No build tools required.
-
-- Option 1: Open `index.html` directly in browser.
-- Option 2 (recommended):
-  ```bash
-  cd cards-against-reality-beta
-  python3 -m http.server 8080
-  ```
-  Then open `http://localhost:8080`
-
-## What's in v0.1
-
-- 3+ players, one rotating judge
-- Black prompt + white card rounds
-- Vibe prompt to inject inside-joke flavored card variants
-- Scoreboard + first to N points
-- Single-device pass-and-play mode
-
-## What's intentionally missing
-
-- Real multiplayer sync
-- Accounts
-- Persistent decks/history
-- Moderation/guardrails
-- Payments
-
-This build exists to test: "Do people laugh enough to play multiple rounds back-to-back?"
+## Notes
+- No chat-message permissions required
+- Built for offline gift reveal workflows
+- Online play is a secondary feature track
