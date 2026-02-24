@@ -254,7 +254,7 @@
       <h1>${$("packName").value}</h1><p>${$("occasion").value} • ${$("tone").value} • Theme: ${selectedTheme?.name||"N/A"}</p>
       <h2>Prompt Cards (Black)</h2><div class='grid'>${pack.black.map(x=>card(x,'black')).join('')}</div>
       <h2>Response Cards (White)</h2><div class='grid'>${pack.white.map(x=>card(x,'white')).join('')}</div>
-      <script>window.onload=()=>window.print()</script></body></html>`);
+      <script>window.onload=()=>window.print()<\/script></body></html>`);
       w.document.close();
       track("export_print_opened");
     }
