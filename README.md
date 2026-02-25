@@ -17,6 +17,11 @@ Final static sprint build before backend migration.
   - 3-pack (best value)
   - 5-pack
 - Purchase intent capture (email + selected package)
+- Deck Library home section:
+  - Save current deck
+  - View all saved decks
+  - Load / JSON export / PDF export per deck
+  - Trigger sales flow from saved deck
 - Export options:
   - JSON pack export
   - Print/PDF view with gift cover + cut-mark style guides
