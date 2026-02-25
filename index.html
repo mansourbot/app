@@ -3,277 +3,105 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cards Against Reality — Pack Design Studio (Beta)</title>
+  <title>Cards Against Reality — Pack Design Studio (Final Static Sprint)</title>
   <style>
-    :root { --bg:#0f0f13; --panel:#1a1b26; --muted:#9ca1b3; --text:#f7f8ff; --acc:#7c5cff; --good:#1ec987; --warn:#ffb020; --bad:#ff6b6b; }
+    :root{--bg:#0f0f13;--panel:#1a1b26;--muted:#9ca1b3;--text:#f7f8ff;--acc:#7c5cff;--good:#1ec987;--warn:#ffb020;--bad:#ff6b6b}
     *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text)}
-    .wrap{max-width:1200px;margin:0 auto;padding:22px}
-    .panel{background:var(--panel);border:1px solid #ffffff1a;border-radius:14px;padding:16px;margin-bottom:14px}
-    h1,h2,h3{margin:.2rem 0 .6rem} .muted{color:var(--muted);font-size:14px}
-    .grid{display:grid;gap:12px}.g2{grid-template-columns:1fr}.g3{grid-template-columns:1fr}
+    .wrap{max-width:1180px;margin:0 auto;padding:20px}.panel{background:var(--panel);border:1px solid #ffffff1a;border-radius:14px;padding:16px;margin-bottom:12px}
+    .muted{color:var(--muted);font-size:13px} h1,h2,h3{margin:.2rem 0 .6rem}
+    .grid{display:grid;gap:10px}.g2{grid-template-columns:1fr}.g3{grid-template-columns:1fr}
     @media(min-width:900px){.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}}
     input,select,textarea,button{width:100%;padding:10px;border-radius:10px;border:1px solid #ffffff22;background:#12131c;color:var(--text)}
-    textarea{min-height:80px;resize:vertical} button{cursor:pointer} button.primary{background:var(--acc);font-weight:700}
-    button.good{background:var(--good);color:#042513;font-weight:700;border-color:#46d8a0}
-    .cards{display:grid;grid-template-columns:1fr;gap:8px;max-height:420px;overflow:auto}
-    .card{padding:10px;border:1px solid #ffffff22;border-radius:10px;background:#11121b}
+    textarea{min-height:80px;resize:vertical} button{cursor:pointer} button.primary{background:var(--acc);font-weight:700} button.good{background:var(--good);color:#072514;font-weight:700}
     .row{display:flex;gap:8px;flex-wrap:wrap}.row button{width:auto}
-    .tag{display:inline-block;font-size:12px;color:#d4ccff;background:#7c5cff22;padding:4px 8px;border-radius:999px}
-    .warn{color:var(--warn)} .bad{color:var(--bad)} .goodtxt{color:var(--good)}
-    .hidden{display:none}
+    .step{display:inline-block;padding:4px 8px;border-radius:999px;background:#ffffff12;font-size:12px;margin-right:6px}
+    .active{outline:2px solid #7c5cff}.card{padding:10px;border:1px solid #ffffff24;border-radius:10px;background:#11121b}
+    .cards{display:grid;grid-template-columns:1fr;gap:8px;max-height:420px;overflow:auto}.hidden{display:none}
+    .warn{color:var(--warn)} .bad{color:var(--bad)} .ok{color:var(--good)}
+    .price-best{outline:2px solid var(--good)} .small{font-size:12px}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>Cards Against Reality — Pack Design Studio</h1>
-    <div class="muted">Build a personalized gift pack. Solo-first creation. Offline reveal ready.</div>
+<div class="wrap">
+  <h1>Cards Against Reality — Pack Design Studio</h1>
+  <div class="muted">Flow: <span class="step" id="s1">1 Brief</span><span class="step" id="s2">2 Theme</span><span class="step" id="s3">3 Cards</span><span class="step" id="s4">4 Review</span><span class="step" id="s5">5 Export</span></div>
 
-    <div class="panel">
-      <h3>1) Pack Brief</h3>
-      <div class="grid g2">
-        <div><label class="muted">Pack name</label><input id="packName" value="Hank vs Pat Holiday Roast" /></div>
-        <div><label class="muted">Occasion</label><select id="occasion"><option>Holiday</option><option>Birthday</option><option>Wedding</option><option>Office Party</option></select></div>
-        <div><label class="muted">Tone</label><select id="tone"><option>Balanced</option><option>Savage</option><option>Unhinged</option><option>Wholesome</option></select></div>
-        <div><label class="muted">Pack size</label><select id="size"><option value="mini">Mini (20+60)</option><option value="standard" selected>Standard (30+90)</option><option value="deluxe">Deluxe (40+120)</option></select></div>
-      </div>
-      <div style="margin-top:10px">
-        <label class="muted">Inside jokes / lore / people / places</label>
-        <textarea id="lore" placeholder="catchphrases, legendary moments, group references"></textarea>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <button id="themeBtn" class="primary">Generate 3 theme ideas</button>
-      </div>
-    </div>
-
-    <div class="panel">
-      <h3>2) Pick a Theme</h3>
-      <div id="themes" class="grid g3"></div>
-    </div>
-
-    <div class="panel">
-      <h3>3) Generate + Improve Cards</h3>
-      <div class="row">
-        <button id="genCards" class="primary">Generate pack cards</button>
-        <button id="regen">Regenerate weak cards</button>
-      </div>
-      <div class="muted" id="stats" style="margin-top:8px">No cards yet.</div>
-      <div id="quality" class="muted" style="margin-top:6px"></div>
-    </div>
-
+  <div class="panel" id="step1">
+    <h3>1) Brief</h3>
     <div class="grid g2">
-      <div class="panel">
-        <h3>Prompt Cards (Black)</h3>
-        <div class="muted">Click a card to edit with AI-ish helpers.</div>
-        <div id="blackCards" class="cards"></div>
-      </div>
-      <div class="panel">
-        <h3>Response Cards (White)</h3>
-        <div class="muted">Click a card to edit with AI-ish helpers.</div>
-        <div id="whiteCards" class="cards"></div>
-      </div>
+      <div><label class="muted">Pack name</label><input id="packName" value="Hank vs Pat Holiday Roast"></div>
+      <div><label class="muted">Occasion</label><select id="occasion"><option>Holiday</option><option>Birthday</option><option>Wedding</option><option>Office Party</option></select></div>
+      <div><label class="muted">Tone</label><select id="tone"><option>Balanced</option><option>Savage</option><option>Unhinged</option><option>Wholesome</option></select></div>
+      <div><label class="muted">Pack size</label><select id="size"><option value="mini">Mini (20+60)</option><option value="standard" selected>Standard (30+90)</option><option value="deluxe">Deluxe (40+120)</option></select></div>
     </div>
+    <div style="margin-top:8px"><label class="muted">Lore / inside jokes / people / places</label><textarea id="lore" placeholder="Give me the lore dump..."></textarea></div>
+    <div class="row" style="margin-top:10px"><button id="themeBtn" class="primary">Generate Theme Ideas</button><button id="saveDraft">Save Draft</button></div>
+  </div>
 
-    <div class="panel hidden" id="editorPanel">
-      <h3>Card Editor</h3>
-      <div class="muted" id="editingMeta"></div>
-      <textarea id="editingText"></textarea>
-      <div class="row" style="margin-top:8px">
-        <button id="rewriteFunny">Rewrite funnier</button>
-        <button id="rewriteSavage">Make savage</button>
-        <button id="rewriteSoft">Soften</button>
-        <button id="rewriteShort">Shorten</button>
-        <button id="saveEdit" class="good">Save card</button>
-      </div>
-    </div>
+  <div class="panel" id="step2">
+    <h3>2) Theme</h3><div class="muted">Pick one theme direction.</div>
+    <div id="themes" class="grid g3" style="margin-top:8px"></div>
+  </div>
 
-    <div class="panel">
-      <h3>4) Pricing & Bundles (Beta)</h3>
-      <div class="grid g3" id="pricing"></div>
-      <div class="row" style="margin-top:10px">
-        <button id="buyBtn" class="primary">Select a package above</button>
-      </div>
-      <div class="muted" id="buyStatus"></div>
-    </div>
-
-    <div class="panel">
-      <h3>5) Export</h3>
-      <div class="muted">JSON for data. Print view to save as PDF.</div>
-      <div class="row" style="margin-top:8px">
-        <button id="exportJson" class="primary">Download Pack JSON</button>
-        <button id="exportPrint">Open Print/PDF View</button>
-      </div>
+  <div class="panel" id="step3">
+    <h3>3) Cards</h3>
+    <div class="row"><button id="genCards" class="primary">Generate Pack Cards</button><button id="regenBlack">Regenerate Black</button><button id="regenWhite">Regenerate White</button></div>
+    <div id="stats" class="muted" style="margin-top:8px">No cards generated yet.</div>
+    <div id="quality" class="muted"></div>
+    <div class="grid g2" style="margin-top:10px">
+      <div class="panel"><h3>Prompt Cards (Black)</h3><div id="blackCards" class="cards"></div></div>
+      <div class="panel"><h3>Response Cards (White)</h3><div id="whiteCards" class="cards"></div></div>
     </div>
   </div>
 
-  <script>
-    const THEMES = [
-      ["Holiday Nuclear", "Festive cheer + maximum roast energy"],
-      ["Lorekeeper", "Deep-cut inside jokes only true friends get"],
-      ["Corporate Snowglobe", "Office party chaos with plausible deniability"],
-      ["Chaotic Nostalgia", "Old memories, no emotional safety"],
-      ["Family Dinner Disaster", "Wholesome setup, unhinged outcomes"],
-      ["Startup Delusion", "Pitch-deck optimism and sleep deprivation"]
-    ];
-    const BLACK = [
-      "At this holiday party, someone brought ____.","The gift reveal was perfect until ____.","Grandma asked about my career, so I mentioned ____.","Our friend group lore can be summarized by ____.","The only thing keeping this friendship alive is ____.","This custom pack was sponsored by ____.","The secret ingredient in our chaos is ____."
-    ];
-    const WHITE = [
-      "a suspiciously confident group chat admin","an apology drafted by ChatGPT","three coffees and one terrible decision","a conspiracy board made of receipts","a friendship held together by memes","high-effort low-judgment energy","a legendary typo no one forgot"
-    ];
-    const BAD_WORDS = ["slur","racist","kill","suicide","nazi"];
+  <div class="panel" id="editorPanel">
+    <h3>4) Review + Edit</h3>
+    <div id="editingMeta" class="muted">Select a card above to edit.</div>
+    <textarea id="editingText"></textarea>
+    <div class="row" style="margin-top:8px"><button id="rewriteFunny">Rewrite Funnier</button><button id="rewriteSavage">Make Savage</button><button id="rewriteSoft">Soften</button><button id="rewriteShort">Shorten</button><button id="saveEdit" class="good">Save</button></div>
+  </div>
 
-    const $ = id => document.getElementById(id);
-    let selectedTheme = null;
-    let pack = { black: [], white: [] };
-    let editing = null;
-    let selectedPackage = null;
-    const events = [];
+  <div class="panel" id="step5">
+    <h3>Pricing + Export</h3>
+    <div class="grid g3" id="pricing"></div>
+    <div class="row" style="margin-top:10px"><input id="buyerEmail" placeholder="Email for purchase intent / delivery list" style="max-width:360px"><button id="buyBtn" class="primary">Select package above</button></div>
+    <div id="buyStatus" class="muted" style="margin-top:8px"></div>
+    <hr style="border-color:#ffffff1a; margin:14px 0;">
+    <div class="row"><button id="exportJson">Download JSON</button><button id="exportPrint" class="primary">Open Print/PDF View</button><button id="sessionSummary">Download Session Summary</button></div>
+  </div>
+</div>
+<script>
+const THEMES=[["Holiday Nuclear","Festive cheer + maximum roast energy"],["Lorekeeper","Deep-cut inside jokes"],["Corporate Snowglobe","Office chaos"],["Chaotic Nostalgia","Memory lane gone wrong"],["Family Dinner Disaster","Wholesome setup, feral outcomes"],["Startup Delusion","Pitch deck & caffeine"]];
+const BLACK=["At this party, someone brought ____.","The gift reveal was perfect until ____.","Our lore can be summarized by ____.","This pack was sponsored by ____.","The secret ingredient is ____."];
+const WHITE=["an apology drafted by AI","three coffees and one bad decision","a friendship held together by memes","weaponized nostalgia","a suspiciously confident group admin"];
+const BAD=["slur","racist","nazi","suicide","kill"];
+const $=id=>document.getElementById(id); let selectedTheme=null, selectedPackage=null, editing=null;
+let pack={black:[],white:[]}; let events=[];
+const track=(name,payload={})=>events.push({name,payload,at:new Date().toISOString()});
+const choose=a=>a[Math.floor(Math.random()*a.length)];
+const words=s=>(s||"").toLowerCase().split(/[^a-z0-9]+/).filter(x=>x.length>3).slice(0,20);
+const counts=()=>{const v=$("size").value;return v==='mini'?{b:20,w:60}:v==='deluxe'?{b:40,w:120}:{b:30,w:90}};
+function setStep(n){['s1','s2','s3','s4','s5'].forEach((k,i)=>$(k).classList.toggle('active',i===n-1));}
+function saveDraft(){ localStorage.setItem('car-studio-draft', JSON.stringify({packName:$("packName").value,occasion:$("occasion").value,tone:$("tone").value,size:$("size").value,lore:$("lore").value,theme:selectedTheme,pack,events})); track('draft_saved'); alert('Draft saved locally.'); }
+function loadDraft(){ try{ const d=JSON.parse(localStorage.getItem('car-studio-draft')||'null'); if(!d) return; $("packName").value=d.packName||''; $("occasion").value=d.occasion||'Holiday'; $("tone").value=d.tone||'Balanced'; $("size").value=d.size||'standard'; $("lore").value=d.lore||''; selectedTheme=d.theme||null; pack=d.pack||{black:[],white:[]}; events=d.events||[]; renderPricing(); renderCards(); runChecks(); }catch{} }
+function renderThemes(){ setStep(2); track('theme_generation_started'); const host=$("themes"); host.innerHTML=''; [...THEMES].sort(()=>Math.random()-.5).slice(0,3).forEach(([name,desc])=>{ const d=document.createElement('div'); d.className='card'; d.innerHTML=`<b>${name}</b><div class='muted small'>${desc}</div><button style='margin-top:8px'>Use theme</button>`; d.querySelector('button').onclick=()=>{selectedTheme={name,desc}; [...host.children].forEach(x=>x.style.outline='none'); d.style.outline='2px solid #7c5cff'; track('theme_selected',{name});}; host.appendChild(d);}); }
+function buildCards(){ if(!selectedTheme) return alert('Pick a theme first.'); setStep(3); const lore=words($("lore").value); const c=counts(); pack.black=Array.from({length:c.b},(_,i)=>`${choose(BLACK)} (${selectedTheme.name} ${i+1}: ${lore.length?choose(lore):'inside-joke'})`); pack.white=Array.from({length:c.w},(_,i)=>`${choose(WHITE)} — ${lore.length?choose(lore):'chaos'} #${i+1}`); renderCards(); runChecks(); track('cards_generated',c); }
+function regen(type){ if(!selectedTheme) return alert('Pick theme first'); const lore=words($("lore").value); if(type==='black') pack.black=pack.black.map((_,i)=>`${choose(BLACK)} (${selectedTheme.name} ${i+1}: ${lore.length?choose(lore):'inside-joke'})`); else pack.white=pack.white.map((_,i)=>`${choose(WHITE)} — ${lore.length?choose(lore):'chaos'} #${i+1}`); renderCards(); runChecks(); track('cards_regenerated',{type}); }
+function renderCards(){ const b=$("blackCards"), w=$("whiteCards"); b.innerHTML=''; w.innerHTML=''; pack.black.forEach((t,i)=>{const d=document.createElement('div'); d.className='card'; d.textContent=`${i+1}. ${t}`; d.onclick=()=>openEdit('black',i); b.appendChild(d)}); pack.white.forEach((t,i)=>{const d=document.createElement('div'); d.className='card'; d.textContent=`${i+1}. ${t}`; d.onclick=()=>openEdit('white',i); w.appendChild(d)}); $("stats").textContent=`${pack.black.length} black + ${pack.white.length} white cards`; }
+function openEdit(type,idx){ setStep(4); editing={type,idx}; $("editingMeta").textContent=`Editing ${type.toUpperCase()} #${idx+1}`; $("editingText").value=pack[type][idx]; track('card_edit_opened',editing); }
+function xform(mode){ if(!editing) return; let t=$("editingText").value; if(mode==='funny') t += ' (everyone pretended this was normal)'; if(mode==='savage') t=t.replace(/friendship/gi,'friendship held together by mild threats').replace(/chaos/gi,'weaponized chaos'); if(mode==='soft') t=t.replace(/weaponized|threats|kill/gi,'unexpected'); if(mode==='short') t=t.split(' ').slice(0,12).join(' ')+'...'; $("editingText").value=t; track('rewrite_clicked',{mode}); }
+function saveEdit(){ if(!editing) return; pack[editing.type][editing.idx]=$("editingText").value.trim(); renderCards(); runChecks(); track('card_saved',editing); }
+function runChecks(){ const all=[...pack.black,...pack.white].map(x=>x.toLowerCase()); const dup=all.length-new Set(all).size; const mean=all.filter(t=>BAD.some(b=>t.includes(b))).length; const obscure=all.filter(t=>t.split(' ').length>18).length; const parts=[]; if(dup) parts.push(`<span class='warn'>${dup} duplicate-like</span>`); if(mean) parts.push(`<span class='bad'>${mean} too-mean flags</span>`); if(obscure) parts.push(`<span class='warn'>${obscure} too-obscure/long</span>`); if(!parts.length) parts.push(`<span class='ok'>Quality clean ✅</span>`); $("quality").innerHTML=parts.join(' • '); track('quality_checked',{dup,mean,obscure}); }
+function renderPricing(){ const s=$("size").value; const base=s==='mini'?14:s==='deluxe'?39:24; const options=[{id:'one',name:'1 Pack',price:base,desc:'Single gift'},{id:'three',name:'3-Pack',price:Math.round(base*3*0.85),desc:'~15% off',best:true},{id:'five',name:'5-Pack',price:Math.round(base*5*0.75),desc:'~25% off'}]; const host=$("pricing"); host.innerHTML=''; options.forEach(o=>{ const d=document.createElement('div'); d.className='card'+(o.best?' price-best':''); d.innerHTML=`<b>${o.name}</b><h2 style='margin:.2rem 0'>$${o.price}</h2><div class='muted small'>${o.desc}${o.best?' • best value':''}</div><button style='margin-top:8px'>Choose</button>`; d.querySelector('button').onclick=()=>{selectedPackage=o; [...host.children].forEach(x=>x.style.outline='none'); d.style.outline='2px solid #1ec987'; $("buyBtn").textContent=`Capture intent: ${o.name} ($${o.price})`; track('package_selected',o);}; host.appendChild(d);}); }
+function captureIntent(){ if(!selectedPackage) return alert('Select package first'); const email=$("buyerEmail").value.trim(); if(!email.includes('@')) return alert('Enter valid email first'); $("buyStatus").innerHTML=`Captured intent for <b>${selectedPackage.name}</b> at <b>$${selectedPackage.price}</b> from <b>${email}</b>.`; track('purchase_intent',{email,package:selectedPackage.id,price:selectedPackage.price}); }
+function exportJSON(){ if(!pack.black.length) return alert('Generate cards first'); setStep(5); const payload={meta:{packName:$("packName").value,occasion:$("occasion").value,tone:$("tone").value,size:$("size").value,theme:selectedTheme},cards:pack,events,ts:new Date().toISOString()}; const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'})); a.download=`${($("packName").value||'car-pack').replace(/\s+/g,'-').toLowerCase()}.json`; a.click(); track('export_json'); }
+function exportPrint(){ if(!pack.black.length) return alert('Generate cards first'); setStep(5); const esc=s=>s.replace(/</g,'&lt;'); const card=(t,c)=>`<div class='card ${c}'>${esc(t)}</div>`; const w=window.open('','_blank'); w.document.write(`<!doctype html><html><head><title>Print Pack</title><style>body{font-family:Arial;padding:18px}h1,h2{margin:12px 0 8px}.cover{padding:16px;border:2px dashed #666;margin-bottom:10px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.card{border:1px solid #bbb;min-height:92px;padding:8px;font-size:12px;position:relative}.card:after{content:'';position:absolute;inset:3px;border:1px dotted #ddd}.black{background:#111;color:#fff}.white{background:#fff;color:#111}@media print{.card{min-height:96px}}</style></head><body><div class='cover'><h1>${esc($("packName").value)}</h1><div>${esc($("occasion").value)} • ${esc($("tone").value)} • Theme: ${esc(selectedTheme?.name||'N/A')}</div><p>Gift-ready custom pack by Cards Against Reality.</p></div><h2>Prompt Cards (Black)</h2><div class='grid'>${pack.black.map(x=>card(x,'black')).join('')}</div><h2>Response Cards (White)</h2><div class='grid'>${pack.white.map(x=>card(x,'white')).join('')}</div><script>window.onload=()=>window.print()<\/script></body></html>`); w.document.close(); track('export_print'); }
+function exportSession(){ const sum={eventsCount:events.length,last10:events.slice(-10),funnel:{themeSelected:events.some(e=>e.name==='theme_selected'),cardsGenerated:events.some(e=>e.name==='cards_generated'),intentCaptured:events.some(e=>e.name==='purchase_intent')},ts:new Date().toISOString()}; const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(sum,null,2)],{type:'application/json'})); a.download='car-session-summary.json'; a.click(); }
 
-    function track(name, payload={}) { events.push({name,payload,at:new Date().toISOString()}); console.log("event", name, payload); }
-    function words(s){ return (s||"").toLowerCase().split(/[^a-z0-9]+/).filter(x=>x.length>3).slice(0,20); }
-    function choose(arr){ return arr[Math.floor(Math.random()*arr.length)] }
-
-    function sizeCounts(){ const v = $("size").value; if(v==="mini") return {b:20,w:60}; if(v==="deluxe") return {b:40,w:120}; return {b:30,w:90}; }
-
-    function renderThemes(){
-      track("theme_generation_started");
-      const host = $("themes"); host.innerHTML = "";
-      const picks = [...THEMES].sort(()=>Math.random()-0.5).slice(0,3);
-      picks.forEach(([name,desc])=>{
-        const el = document.createElement("div");
-        el.className = "card";
-        el.innerHTML = `<div class="tag">Theme</div><h4>${name}</h4><div class="muted">${desc}</div><button style="margin-top:8px">Use this theme</button>`;
-        el.querySelector("button").onclick = ()=>{ selectedTheme = {name,desc}; [...host.children].forEach(c=>c.style.outline="none"); el.style.outline = "2px solid #7c5cff"; track("theme_selected", {name}); };
-        host.appendChild(el);
-      });
-    }
-
-    function generateCards(){
-      if(!selectedTheme){ alert("Pick a theme first."); return; }
-      track("card_generation_started");
-      const lore = words($("lore").value);
-      const {b,w} = sizeCounts();
-      pack.black = Array.from({length:b}, (_,i)=> `${choose(BLACK)} (${selectedTheme.name} #${i+1}: ${lore.length?choose(lore):"friendship"})`);
-      pack.white = Array.from({length:w}, (_,i)=> `${choose(WHITE)} — ${(lore.length?choose(lore):"chaos")} edition #${i+1}`);
-      renderCards();
-      runQualityChecks();
-      track("card_generation_completed", {black: b, white: w});
-    }
-
-    function renderCards(){
-      const bHost = $("blackCards"), wHost = $("whiteCards"); bHost.innerHTML = ""; wHost.innerHTML = "";
-      pack.black.forEach((c,idx)=>{ const el=document.createElement("div"); el.className="card"; el.textContent=`${idx+1}. ${c}`; el.onclick=()=>openEditor("black", idx); bHost.appendChild(el); });
-      pack.white.forEach((c,idx)=>{ const el=document.createElement("div"); el.className="card"; el.textContent=`${idx+1}. ${c}`; el.onclick=()=>openEditor("white", idx); wHost.appendChild(el); });
-      $("stats").textContent = `Generated ${pack.black.length} prompt + ${pack.white.length} response cards (${pack.black.length+pack.white.length} total).`;
-    }
-
-    function openEditor(type, idx){
-      editing = {type, idx};
-      $("editorPanel").classList.remove("hidden");
-      $("editingMeta").textContent = `Editing ${type.toUpperCase()} card #${idx+1}`;
-      $("editingText").value = pack[type][idx];
-      track("card_edit_opened", {type, idx});
-    }
-
-    function transformText(mode){
-      if(!editing) return;
-      let t = $("editingText").value;
-      if(mode==="funny") t = t + " (and everyone pretended this was normal)";
-      if(mode==="savage") t = t.replace("friendship","friendship held together by threats").replace("chaos","weaponized chaos");
-      if(mode==="soft") t = t.replace(/kill|destroy|weaponized/gi,"surprise");
-      if(mode==="short") t = t.split(" ").slice(0,12).join(" ") + "...";
-      $("editingText").value = t;
-      track("card_rewrite_clicked", {mode});
-    }
-
-    function saveEdit(){
-      if(!editing) return;
-      pack[editing.type][editing.idx] = $("editingText").value.trim();
-      track("card_edited_saved", editing);
-      renderCards();
-      runQualityChecks();
-    }
-
-    function runQualityChecks(){
-      const all = [...pack.black, ...pack.white].map(x=>x.toLowerCase());
-      const dupes = all.length - new Set(all).size;
-      const tooMean = all.filter(c=>BAD_WORDS.some(b=>c.includes(b))).length;
-      const obscure = all.filter(c=>c.split(" ").length > 18).length;
-      const out = [];
-      if(dupes>0) out.push(`<span class='warn'>${dupes} duplicate-like cards</span>`);
-      if(tooMean>0) out.push(`<span class='bad'>${tooMean} potentially too-mean cards</span>`);
-      if(obscure>0) out.push(`<span class='warn'>${obscure} possibly too-obscure/long cards</span>`);
-      if(!out.length) out.push("<span class='goodtxt'>Quality checks clean ✅</span>");
-      $("quality").innerHTML = out.join(" • ");
-      track("quality_check_run", {dupes, tooMean, obscure});
-    }
-
-    function renderPricing(){
-      const size = $("size").value;
-      const base = size === "mini" ? 14 : size === "deluxe" ? 39 : 24;
-      const opts = [
-        {id:"single", name:"1 Pack", price: base, desc:"Best for one gift"},
-        {id:"bundle3", name:"3-Pack Bundle", price: Math.round(base*3*0.85), desc:"~15% off"},
-        {id:"bundle5", name:"5-Pack Bundle", price: Math.round(base*5*0.75), desc:"~25% off"}
-      ];
-      const host = $("pricing"); host.innerHTML = "";
-      opts.forEach(o=>{
-        const el = document.createElement("div");
-        el.className = "card";
-        el.innerHTML = `<div class='tag'>${o.name}</div><h4>$${o.price}</h4><div class='muted'>${o.desc}</div><button style='margin-top:8px'>Choose</button>`;
-        el.querySelector("button").onclick = ()=>{ selectedPackage=o; [...host.children].forEach(c=>c.style.outline="none"); el.style.outline='2px solid #1ec987'; $("buyBtn").textContent = `Buy ${o.name} — $${o.price}`; track("pricing_package_selected", o); };
-        host.appendChild(el);
-      });
-    }
-
-    function buy(){
-      if(!selectedPackage){ alert("Select a package first."); return; }
-      $("buyStatus").innerHTML = `Intent captured: <b>${selectedPackage.name}</b> at <b>$${selectedPackage.price}</b>. (Checkout integration next)`;
-      track("purchase_intent_clicked", selectedPackage);
-    }
-
-    function exportJson(){
-      if(!pack.black.length){ alert("Generate cards first."); return; }
-      const payload = { packName: $("packName").value, occasion: $("occasion").value, tone: $("tone").value, theme: selectedTheme, counts: sizeCounts(), cards: pack, events, generatedAt: new Date().toISOString() };
-      const blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json"});
-      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${($("packName").value||"car-pack").replace(/\s+/g,"-").toLowerCase()}.json`; a.click();
-      track("export_json_downloaded");
-    }
-
-    function exportPrint(){
-      if(!pack.black.length){ alert("Generate cards first."); return; }
-      const w = window.open("", "_blank");
-      const card = (t, cls) => `<div class='card ${cls}'>${t.replace(/</g,"&lt;")}</div>`;
-      w.document.write(`<!doctype html><html><head><title>Print Pack</title><style>
-      body{font-family:Arial,sans-serif;padding:18px} h2{margin:16px 0 8px}
-      .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-      .card{border:1px solid #bbb;min-height:90px;padding:8px;font-size:12px;page-break-inside:avoid}
-      .black{background:#111;color:#fff}.white{background:#fff;color:#111}
-      @media print {.card{min-height:96px}}
-      </style></head><body>
-      <h1>${$("packName").value}</h1><p>${$("occasion").value} • ${$("tone").value} • Theme: ${selectedTheme?.name||"N/A"}</p>
-      <h2>Prompt Cards (Black)</h2><div class='grid'>${pack.black.map(x=>card(x,'black')).join('')}</div>
-      <h2>Response Cards (White)</h2><div class='grid'>${pack.white.map(x=>card(x,'white')).join('')}</div>
-      <script>window.onload=()=>window.print()<\/script></body></html>`);
-      w.document.close();
-      track("export_print_opened");
-    }
-
-    $("themeBtn").onclick = renderThemes;
-    $("genCards").onclick = generateCards;
-    $("regen").onclick = generateCards;
-    $("rewriteFunny").onclick = ()=>transformText("funny");
-    $("rewriteSavage").onclick = ()=>transformText("savage");
-    $("rewriteSoft").onclick = ()=>transformText("soft");
-    $("rewriteShort").onclick = ()=>transformText("short");
-    $("saveEdit").onclick = saveEdit;
-    $("exportJson").onclick = exportJson;
-    $("exportPrint").onclick = exportPrint;
-    $("buyBtn").onclick = buy;
-    $("size").onchange = renderPricing;
-
-    renderThemes();
-    renderPricing();
-  </script>
+$("themeBtn").onclick=renderThemes; $("genCards").onclick=buildCards; $("regenBlack").onclick=()=>regen('black'); $("regenWhite").onclick=()=>regen('white');
+$("rewriteFunny").onclick=()=>xform('funny'); $("rewriteSavage").onclick=()=>xform('savage'); $("rewriteSoft").onclick=()=>xform('soft'); $("rewriteShort").onclick=()=>xform('short');
+$("saveEdit").onclick=saveEdit; $("exportJson").onclick=exportJSON; $("exportPrint").onclick=exportPrint; $("sessionSummary").onclick=exportSession; $("size").onchange=renderPricing; $("buyBtn").onclick=captureIntent; $("saveDraft").onclick=saveDraft;
+renderThemes(); renderPricing(); loadDraft(); setStep(1);
+</script>
 </body>
 </html>

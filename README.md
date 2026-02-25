@@ -1,31 +1,26 @@
 # Cards Against Reality — Pack Design Studio Beta
 
-Studio-first prototype for creating custom offline gift packs.
+Final static sprint build before backend migration.
 
-## Current capabilities (money-critical step)
-- Solo pack creation flow (occasion, tone, size, lore)
-- AI-style theme suggestion (3 options)
-- Card generation for:
-  - Mini: 20 black + 60 white
-  - Standard: 30 black + 90 white
-  - Deluxe: 40 black + 120 white
-- Card editor tools:
-  - Rewrite funnier
-  - Make savage
-  - Soften
-  - Shorten
+## Included in this sprint
+- Step-based studio flow: Brief → Theme → Cards → Review → Export
+- Local draft save/load via browser storage
+- Theme generation + selection
+- Card generation with separate bulk regenerate for black/white cards
+- Card editor actions: funnier / savage / soften / shorten
 - Quality checks:
-  - Duplicate-like detection
-  - Too-mean keyword warnings
-  - Too-obscure/long warning
-- Pricing/bundle selection:
+  - duplicate-like detection
+  - too-mean keyword flags
+  - too-obscure/long card warnings
+- Pricing UX with bundle highlighting:
   - 1 pack
-  - 3-pack (~15% off)
-  - 5-pack (~25% off)
+  - 3-pack (best value)
+  - 5-pack
+- Purchase intent capture (email + selected package)
 - Export options:
-  - JSON export
-  - Print/PDF view (browser print)
-- Basic event tracking in-browser console + export payload
+  - JSON pack export
+  - Print/PDF view with gift cover + cut-mark style guides
+  - Session summary export (funnel signals)
 
 ## Run
 ```bash
@@ -34,7 +29,8 @@ python3 -m http.server 8080
 ```
 Open: http://localhost:8080
 
-## Notes
-- No chat-message permissions required
-- Built for offline gift reveal workflows
-- Checkout integration is the next step
+## Next (backend migration)
+- Real auth/session storage
+- Checkout integration (Stripe)
+- Webhooks/order fulfillment
+- Production analytics sink
