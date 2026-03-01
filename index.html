@@ -97,30 +97,62 @@ function currentMeta(){return{packName:$("packName").value,occasion:$("occasion"
 function saveDraft(){ localStorage.setItem('car-studio-draft', JSON.stringify({meta:currentMeta(),lore:$("lore").value,pack,events})); track('draft_saved'); alert('Draft saved locally.'); }
 function loadDraft(){ try{ const d=JSON.parse(localStorage.getItem('car-studio-draft')||'null'); if(!d) return; const m=d.meta||{}; $("packName").value=m.packName||''; $("occasion").value=m.occasion||'Holiday'; $("tone").value=m.tone||'Balanced'; $("size").value=m.size||'standard'; $("lore").value=d.lore||''; selectedTheme=m.theme||null; pack=d.pack||{black:[],white:[]}; events=d.events||[]; renderPricing(); renderCards(); runChecks(); }catch{} }
 
-function getDecks(){ try{return JSON.parse(localStorage.getItem('car-deck-library')||'[]')}catch{return[]} }
-function setDecks(decks){ localStorage.setItem('car-deck-library', JSON.stringify(decks)); }
-function saveCurrentDeck(){
-  if(!pack.black.length) return alert('Generate cards first.');
-  const decks=getDecks();
-  const id=Date.now().toString();
-  decks.unshift({id,meta:currentMeta(),cards:pack,createdAt:new Date().toISOString()});
-  setDecks(decks.slice(0,50));
+const OWNER_KEY='car-owner-id';
+const ownerId=localStorage.getItem(OWNER_KEY)||(`owner-${Math.random().toString(36).slice(2,10)}`);
+localStorage.setItem(OWNER_KEY,ownerId);
+let cachedDecks=[];
+
+async function apiFetch(path, options={}){
+  const res=await fetch(path,{...options,headers:{'Content-Type':'application/json','x-owner-id':ownerId,...(options.headers||{})}});
+  if(!res.ok) throw new Error(`API ${res.status}`);
+  return res.json();
+}
+function getDecks(){ return cachedDecks; }
+function setDecksLocal(decks){ localStorage.setItem('car-deck-library', JSON.stringify(decks)); cachedDecks=decks; }
+
+async function refreshDecks(){
+  try{
+    const out=await apiFetch('/api/decks');
+    cachedDecks=out.decks||[];
+  }catch{
+    // fallback to legacy localStorage when backend unavailable
+    try{ cachedDecks=JSON.parse(localStorage.getItem('car-deck-library')||'[]'); }catch{ cachedDecks=[]; }
+  }
   renderDeckLibrary();
-  track('deck_saved',{id});
+}
+
+async function saveCurrentDeck(){
+  if(!pack.black.length) return alert('Generate cards first.');
+  const deck={meta:currentMeta(),cards:pack};
+  try{
+    const out=await apiFetch('/api/decks',{method:'POST',body:JSON.stringify(deck)});
+    track('deck_saved',{id:out.deck.id,store:'api'});
+  }catch{
+    const decks=getDecks();
+    const id=Date.now().toString();
+    decks.unshift({id,meta:deck.meta,cards:deck.cards,createdAt:new Date().toISOString()});
+    setDecksLocal(decks.slice(0,50));
+    track('deck_saved',{id,store:'local'});
+  }
+  await refreshDecks();
 }
 function loadDeck(id){
   const d=getDecks().find(x=>x.id===id); if(!d) return;
   const m=d.meta||{}; $("packName").value=m.packName||''; $("occasion").value=m.occasion||'Holiday'; $("tone").value=m.tone||'Balanced'; $("size").value=m.size||'standard'; selectedTheme=m.theme||null;
   pack=d.cards||{black:[],white:[]}; renderPricing(); renderCards(); runChecks(); setStep(3); track('deck_loaded',{id});
 }
-function deleteDeck(id){ setDecks(getDecks().filter(d=>d.id!==id)); renderDeckLibrary(); }
+async function deleteDeck(id){
+  try{ await apiFetch(`/api/decks/${id}`,{method:'DELETE'}); }
+  catch{ setDecksLocal(getDecks().filter(d=>d.id!==id)); }
+  await refreshDecks();
+}
 function renderDeckLibrary(){
   const host=$("deckLibrary"), decks=getDecks(); host.innerHTML='';
   if(!decks.length){ host.innerHTML="<div class='muted'>No saved decks yet. Save one from your current work.</div>"; return; }
   decks.forEach(d=>{
     const c=document.createElement('div'); c.className='card';
     const name=d.meta?.packName||'Untitled deck'; const theme=d.meta?.theme?.name||'No theme';
-    c.innerHTML=`<b>${name}</b><div class='muted small'>${theme} • ${d.cards.black.length} black + ${d.cards.white.length} white</div><div class='muted small'>${new Date(d.createdAt).toLocaleString()}</div><div class='row' style='margin-top:8px'><button data-a='load'>Load</button><button data-a='pdf'>PDF</button><button data-a='json'>JSON</button><button data-a='sale'>Sale</button><button data-a='del'>Delete</button></div>`;
+    c.innerHTML=`<b>${name}</b><div class='muted small'>${theme} • ${d.cards.black.length} black + ${d.cards.white.length} white</div><div class='muted small'>${new Date(d.createdAt||Date.now()).toLocaleString()}</div><div class='row' style='margin-top:8px'><button data-a='load'>Load</button><button data-a='pdf'>PDF</button><button data-a='json'>JSON</button><button data-a='sale'>Sale</button><button data-a='del'>Delete</button></div>`;
     c.querySelector("[data-a='load']").onclick=()=>loadDeck(d.id);
     c.querySelector("[data-a='pdf']").onclick=()=>exportPrint(d);
     c.querySelector("[data-a='json']").onclick=()=>exportJSON(d);
@@ -162,9 +194,18 @@ function exportSession(){ const sum={eventsCount:events.length,last10:events.sli
 $("themeBtn").onclick=renderThemes; $("genCards").onclick=buildCards; $("regenBlack").onclick=()=>regen('black'); $("regenWhite").onclick=()=>regen('white');
 $("rewriteFunny").onclick=()=>xform('funny'); $("rewriteSavage").onclick=()=>xform('savage'); $("rewriteSoft").onclick=()=>xform('soft'); $("rewriteShort").onclick=()=>xform('short');
 $("saveEdit").onclick=saveEdit; $("exportJson").onclick=()=>exportJSON(); $("exportPrint").onclick=()=>exportPrint(); $("sessionSummary").onclick=exportSession; $("size").onchange=renderPricing; $("buyBtn").onclick=captureIntent; $("saveDraft").onclick=saveDraft;
-$("saveDeck").onclick=saveCurrentDeck; $("clearDecks").onclick=()=>{ if(confirm('Delete all saved decks?')){ localStorage.removeItem('car-deck-library'); renderDeckLibrary(); }};
+$("saveDeck").onclick=saveCurrentDeck; $("clearDecks").onclick=async ()=>{
+  if(!confirm('Delete all saved decks?')) return;
+  const decks=[...getDecks()];
+  for(const d of decks){
+    try{ await apiFetch(`/api/decks/${d.id}`,{method:'DELETE'}); }catch{}
+  }
+  localStorage.removeItem('car-deck-library');
+  cachedDecks=[];
+  renderDeckLibrary();
+};
 
-renderThemes(); renderPricing(); loadDraft(); renderDeckLibrary(); setStep(1);
+renderThemes(); renderPricing(); loadDraft(); refreshDecks(); setStep(1);
 </script>
 </body>
 </html>
