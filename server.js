@@ -126,7 +126,7 @@ app.post('/api/checkout/session', async (req, res) => {
         packageId,
         packageName
       },
-      success_url: `${APP_URL}/?checkout=success`,
+      success_url: `${APP_URL}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${APP_URL}/?checkout=cancelled`
     });
 
@@ -135,6 +135,57 @@ app.post('/api/checkout/session', async (req, res) => {
     console.error('checkout_session_error', err);
     res.status(500).json({ error: 'could_not_create_checkout_session' });
   }
+});
+
+app.get('/api/checkout/verify', async (req, res) => {
+  try {
+    if (!stripe) return res.status(400).json({ error: 'Stripe not configured on server' });
+    const sessionId = req.query.session_id;
+    if (!sessionId) return res.status(400).json({ error: 'session_id required' });
+
+    const session = await stripe.checkout.sessions.retrieve(String(sessionId));
+    const paid = session.payment_status === 'paid';
+    res.json({ paid, sessionId: session.id, email: session.customer_details?.email || null });
+  } catch (err) {
+    console.error('checkout_verify_error', err);
+    res.status(500).json({ error: 'could_not_verify_checkout' });
+  }
+});
+
+app.post('/api/generate', (req, res) => {
+  const { themeName, lore = '', counts = { b: 30, w: 90 } } = req.body || {};
+  const loreWords = String(lore)
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(w => w.length > 3)
+    .slice(0, 20);
+
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const inject = () => loreWords.length ? pick(loreWords) : 'inside-joke';
+
+  const blackTemplates = [
+    'At this party, someone brought ____.',
+    'The gift reveal was perfect until ____.',
+    'Our group lore can be summarized by ____.',
+    'No one talks about ____ anymore.',
+    'This deck exists because of ____.'
+  ];
+
+  const whiteTemplates = [
+    'a suspiciously specific callback to {x}',
+    '{x}, but somehow legal',
+    'an emergency meeting about {x}',
+    'the forbidden story about {x}',
+    'weaponized {x}'
+  ];
+
+  const b = Math.max(1, Number(counts.b || 30));
+  const w = Math.max(1, Number(counts.w || 90));
+
+  const black = Array.from({ length: b }, (_, i) => `${pick(blackTemplates)} (${themeName || 'Theme'} ${i + 1}: ${inject()})`);
+  const white = Array.from({ length: w }, () => pick(whiteTemplates).replaceAll('{x}', inject()));
+
+  res.json({ black, white });
 });
 
 app.get('*', (_req, res) => {

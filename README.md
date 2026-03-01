@@ -1,6 +1,6 @@
 # Cards Against Reality — Pack Design Studio
 
-Now migrated to a lightweight full-stack setup (frontend + backend API).
+Now migrated to a lightweight full-stack setup (frontend + backend API), with Vercel + Supabase path scaffolded.
 
 ## What changed in this step
 - Added Express backend (`server.js`)
@@ -20,20 +20,20 @@ npm start
 ```
 Open: `http://localhost:3000`
 
-## Render deployment (recommended)
-- This repo includes `render.yaml` for one-click blueprint deploy on Render.
-- In Render: New + → Blueprint → select this repo.
-- Render will build and run with:
-  - Build: `npm install`
-  - Start: `npm start`
-  - Health: `/api/health`
+## Vercel deployment (preferred)
+- `vercel.json` is included for Node deployment.
+- In Vercel: import repo and deploy.
+- Runtime entrypoint: `server.js`.
 
-### Stripe env vars (next step)
-Set these in Render service environment:
-- `APP_URL` = your Render URL (e.g. `https://cards-against-reality-app.onrender.com`)
+### Required env vars
+- `APP_URL` = your deployed app URL
 - `STRIPE_SECRET_KEY` = Stripe test secret key (`sk_test_...`)
 
+## Supabase setup (next)
+- SQL scaffold is in `docs/supabase-schema.sql`.
+- Apply that schema in Supabase SQL editor.
+- Then we can switch file storage (`data/decks.json`) to Supabase.
+
 ## Notes
-- Data stored in `data/decks.json` in this phase (ephemeral on free instances)
-- This is the migration checkpoint before Stripe integration
-- Next: deploy on Render, then wire Stripe test mode
+- Exports are now payment-gated: JSON/PDF unlock only after verified Stripe checkout.
+- Deck generation now calls `/api/generate` and uses user lore/theme input directly.

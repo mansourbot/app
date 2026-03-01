@@ -86,7 +86,7 @@ const BLACK=["At this party, someone brought ____.","The gift reveal was perfect
 const WHITE=["an apology drafted by AI","three coffees and one bad decision","a friendship held together by memes","weaponized nostalgia","a suspiciously confident group admin"];
 const BAD=["slur","racist","nazi","suicide","kill"];
 const $=id=>document.getElementById(id); let selectedTheme=null, selectedPackage=null, editing=null;
-let pack={black:[],white:[]}; let events=[];
+let pack={black:[],white:[]}; let events=[]; let exportUnlocked=false;
 const track=(name,payload={})=>events.push({name,payload,at:new Date().toISOString()});
 const choose=a=>a[Math.floor(Math.random()*a.length)];
 const words=s=>(s||"").toLowerCase().split(/[^a-z0-9]+/).filter(x=>x.length>3).slice(0,20);
@@ -139,7 +139,7 @@ async function saveCurrentDeck(){
 function loadDeck(id){
   const d=getDecks().find(x=>x.id===id); if(!d) return;
   const m=d.meta||{}; $("packName").value=m.packName||''; $("occasion").value=m.occasion||'Holiday'; $("tone").value=m.tone||'Balanced'; $("size").value=m.size||'standard'; selectedTheme=m.theme||null;
-  pack=d.cards||{black:[],white:[]}; renderPricing(); renderCards(); runChecks(); setStep(3); track('deck_loaded',{id});
+  pack=d.cards||{black:[],white:[]}; exportUnlocked=false; renderPricing(); renderCards(); runChecks(); setStep(3); track('deck_loaded',{id});
 }
 async function deleteDeck(id){
   try{ await apiFetch(`/api/decks/${id}`,{method:'DELETE'}); }
@@ -163,8 +163,29 @@ function renderDeckLibrary(){
 }
 
 function renderThemes(){ setStep(2); track('theme_generation_started'); const host=$("themes"); host.innerHTML=''; [...THEMES].sort(()=>Math.random()-.5).slice(0,3).forEach(([name,desc])=>{ const d=document.createElement('div'); d.className='card'; d.innerHTML=`<b>${name}</b><div class='muted small'>${desc}</div><button style='margin-top:8px'>Use theme</button>`; d.querySelector('button').onclick=()=>{selectedTheme={name,desc}; [...host.children].forEach(x=>x.style.outline='none'); d.style.outline='2px solid #7c5cff'; track('theme_selected',{name});}; host.appendChild(d);}); }
-function buildCards(){ if(!selectedTheme) return alert('Pick a theme first.'); setStep(3); const lore=words($("lore").value); const c=counts(); pack.black=Array.from({length:c.b},(_,i)=>`${choose(BLACK)} (${selectedTheme.name} ${i+1}: ${lore.length?choose(lore):'inside-joke'})`); pack.white=Array.from({length:c.w},(_,i)=>`${choose(WHITE)} — ${lore.length?choose(lore):'chaos'} #${i+1}`); renderCards(); runChecks(); track('cards_generated',c); }
-function regen(type){ if(!selectedTheme) return alert('Pick theme first'); const lore=words($("lore").value); if(type==='black') pack.black=pack.black.map((_,i)=>`${choose(BLACK)} (${selectedTheme.name} ${i+1}: ${lore.length?choose(lore):'inside-joke'})`); else pack.white=pack.white.map((_,i)=>`${choose(WHITE)} — ${lore.length?choose(lore):'chaos'} #${i+1}`); renderCards(); runChecks(); track('cards_regenerated',{type}); }
+async function buildCards(){
+  if(!selectedTheme) return alert('Pick a theme first.');
+  setStep(3);
+  const c=counts();
+  exportUnlocked=false;
+  try{
+    const res=await fetch('/api/generate',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({themeName:selectedTheme.name,lore:$("lore").value,counts:c})
+    });
+    const out=await res.json();
+    if(!res.ok) throw new Error(out.error||'generate_failed');
+    pack.black=out.black||[];
+    pack.white=out.white||[];
+  }catch{
+    const lore=words($("lore").value);
+    pack.black=Array.from({length:c.b},(_,i)=>`${choose(BLACK)} (${selectedTheme.name} ${i+1}: ${lore.length?choose(lore):'inside-joke'})`);
+    pack.white=Array.from({length:c.w},(_,i)=>`${choose(WHITE)} — ${lore.length?choose(lore):'chaos'} #${i+1}`);
+  }
+  renderCards(); runChecks(); track('cards_generated',c);
+}
+function regen(type){ if(!selectedTheme) return alert('Pick theme first'); exportUnlocked=false; if(type==='black') return buildCards(); if(type==='white') return buildCards(); }
 function renderCards(){ const b=$("blackCards"), w=$("whiteCards"); b.innerHTML=''; w.innerHTML=''; pack.black.forEach((t,i)=>{const d=document.createElement('div'); d.className='card'; d.textContent=`${i+1}. ${t}`; d.onclick=()=>openEdit('black',i); b.appendChild(d)}); pack.white.forEach((t,i)=>{const d=document.createElement('div'); d.className='card'; d.textContent=`${i+1}. ${t}`; d.onclick=()=>openEdit('white',i); w.appendChild(d)}); $("stats").textContent=`${pack.black.length} black + ${pack.white.length} white cards`; }
 function openEdit(type,idx){ setStep(4); editing={type,idx}; $("editingMeta").textContent=`Editing ${type.toUpperCase()} #${idx+1}`; $("editingText").value=pack[type][idx]; track('card_edit_opened',editing); }
 function xform(mode){ if(!editing) return; let t=$("editingText").value; if(mode==='funny') t += ' (everyone pretended this was normal)'; if(mode==='savage') t=t.replace(/friendship/gi,'friendship held together by mild threats').replace(/chaos/gi,'weaponized chaos'); if(mode==='soft') t=t.replace(/weaponized|threats|kill/gi,'unexpected'); if(mode==='short') t=t.split(' ').slice(0,12).join(' ')+'...'; $("editingText").value=t; track('rewrite_clicked',{mode}); }
@@ -200,6 +221,7 @@ async function captureIntent(){
 }
 
 function exportJSON(deck){
+  if(!exportUnlocked) return alert('Payment required before export. Complete checkout first.');
   const source = deck ? {meta:deck.meta,cards:deck.cards} : {meta:currentMeta(),cards:pack};
   if(!source.cards.black.length) return alert('Generate cards first');
   setStep(5);
@@ -208,6 +230,7 @@ function exportJSON(deck){
   a.download=`${(source.meta.packName||'car-pack').replace(/\s+/g,'-').toLowerCase()}.json`; a.click(); track('export_json');
 }
 function exportPrint(deck){
+  if(!exportUnlocked) return alert('Payment required before export. Complete checkout first.');
   const source = deck ? {meta:deck.meta,cards:deck.cards} : {meta:currentMeta(),cards:pack};
   if(!source.cards.black.length) return alert('Generate cards first');
   setStep(5);
@@ -232,10 +255,24 @@ $("saveDeck").onclick=saveCurrentDeck; $("clearDecks").onclick=async ()=>{
 };
 
 const q=new URLSearchParams(window.location.search);
-if(q.get('checkout')==='success') $("buyStatus").innerHTML="<span class='ok'>Payment successful ✅</span>";
 if(q.get('checkout')==='cancelled') $("buyStatus").innerHTML="<span class='warn'>Checkout cancelled.</span>";
 
-renderThemes(); renderPricing(); loadDraft(); refreshDecks(); setStep(1);
+async function verifyCheckoutIfNeeded(){
+  if(q.get('checkout')!=='success') return;
+  const sessionId=q.get('session_id');
+  if(!sessionId){ $("buyStatus").innerHTML="<span class='warn'>Payment return missing session id.</span>"; return; }
+  try{
+    const res=await fetch(`/api/checkout/verify?session_id=${encodeURIComponent(sessionId)}`);
+    const out=await res.json();
+    if(!res.ok || !out.paid) throw new Error('not_paid');
+    exportUnlocked=true;
+    $("buyStatus").innerHTML="<span class='ok'>Payment successful ✅ Export unlocked for this session.</span>";
+  }catch{
+    $("buyStatus").innerHTML="<span class='warn'>Could not verify payment yet.</span>";
+  }
+}
+
+renderThemes(); renderPricing(); loadDraft(); refreshDecks(); setStep(1); verifyCheckoutIfNeeded();
 </script>
 </body>
 </html>
