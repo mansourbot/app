@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: cards-against-reality-app
+    runtime: node
+    plan: free
+    region: ohio
+    branch: master
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 20

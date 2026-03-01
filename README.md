@@ -20,7 +20,15 @@ npm start
 ```
 Open: `http://localhost:3000`
 
+## Render deployment (recommended)
+- This repo includes `render.yaml` for one-click blueprint deploy on Render.
+- In Render: New + → Blueprint → select this repo.
+- Render will build and run with:
+  - Build: `npm install`
+  - Start: `npm start`
+  - Health: `/api/health`
+
 ## Notes
-- Data stored in `data/decks.json` in this phase
+- Data stored in `data/decks.json` in this phase (ephemeral on free instances)
 - This is the migration checkpoint before Stripe integration
-- Next: deploy this Node app (Render/Fly/Railway/Vercel server) and then wire Stripe test mode
+- Next: deploy on Render, then wire Stripe test mode
