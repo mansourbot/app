@@ -171,7 +171,33 @@ function xform(mode){ if(!editing) return; let t=$("editingText").value; if(mode
 function saveEdit(){ if(!editing) return; pack[editing.type][editing.idx]=$("editingText").value.trim(); renderCards(); runChecks(); track('card_saved',editing); }
 function runChecks(){ const all=[...pack.black,...pack.white].map(x=>x.toLowerCase()); const dup=all.length-new Set(all).size; const mean=all.filter(t=>BAD.some(b=>t.includes(b))).length; const obscure=all.filter(t=>t.split(' ').length>18).length; const parts=[]; if(dup) parts.push(`<span class='warn'>${dup} duplicate-like</span>`); if(mean) parts.push(`<span class='bad'>${mean} too-mean flags</span>`); if(obscure) parts.push(`<span class='warn'>${obscure} too-obscure/long</span>`); if(!parts.length) parts.push(`<span class='ok'>Quality clean ✅</span>`); $("quality").innerHTML=parts.join(' • '); track('quality_checked',{dup,mean,obscure}); }
 function renderPricing(){ const s=$("size").value; const base=s==='mini'?14:s==='deluxe'?39:24; const options=[{id:'one',name:'1 Pack',price:base,desc:'Single gift'},{id:'three',name:'3-Pack',price:Math.round(base*3*0.85),desc:'~15% off',best:true},{id:'five',name:'5-Pack',price:Math.round(base*5*0.75),desc:'~25% off'}]; const host=$("pricing"); host.innerHTML=''; options.forEach(o=>{ const d=document.createElement('div'); d.className='card'+(o.best?' price-best':''); d.innerHTML=`<b>${o.name}</b><h2 style='margin:.2rem 0'>$${o.price}</h2><div class='muted small'>${o.desc}${o.best?' • best value':''}</div><button style='margin-top:8px'>Choose</button>`; d.querySelector('button').onclick=()=>{selectedPackage=o; [...host.children].forEach(x=>x.style.outline='none'); d.style.outline='2px solid #1ec987'; $("buyBtn").textContent=`Capture intent: ${o.name} ($${o.price})`; track('package_selected',o);}; host.appendChild(d);}); }
-function captureIntent(){ if(!selectedPackage) return alert('Select package first'); const email=$("buyerEmail").value.trim(); if(!email.includes('@')) return alert('Enter valid email first'); $("buyStatus").innerHTML=`Captured intent for <b>${selectedPackage.name}</b> at <b>$${selectedPackage.price}</b> from <b>${email}</b>.`; track('purchase_intent',{email,package:selectedPackage.id,price:selectedPackage.price}); }
+async function captureIntent(){
+  if(!selectedPackage) return alert('Select package first');
+  const email=$("buyerEmail").value.trim();
+  if(!email.includes('@')) return alert('Enter valid email first');
+
+  track('purchase_intent',{email,package:selectedPackage.id,price:selectedPackage.price});
+  $("buyStatus").innerHTML=`Creating checkout for <b>${selectedPackage.name}</b>...`;
+
+  try{
+    const res=await fetch('/api/checkout/session',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        packageId:selectedPackage.id,
+        packageName:selectedPackage.name,
+        amountUsd:selectedPackage.price,
+        email
+      })
+    });
+    const out=await res.json();
+    if(!res.ok) throw new Error(out.error||'checkout_failed');
+    if(out.url){ window.location.href=out.url; return; }
+    throw new Error('missing_checkout_url');
+  }catch(e){
+    $("buyStatus").innerHTML=`Captured intent for <b>${selectedPackage.name}</b> at <b>$${selectedPackage.price}</b> from <b>${email}</b>. Stripe checkout not live yet.`;
+  }
+}
 
 function exportJSON(deck){
   const source = deck ? {meta:deck.meta,cards:deck.cards} : {meta:currentMeta(),cards:pack};
@@ -204,6 +230,10 @@ $("saveDeck").onclick=saveCurrentDeck; $("clearDecks").onclick=async ()=>{
   cachedDecks=[];
   renderDeckLibrary();
 };
+
+const q=new URLSearchParams(window.location.search);
+if(q.get('checkout')==='success') $("buyStatus").innerHTML="<span class='ok'>Payment successful ✅</span>";
+if(q.get('checkout')==='cancelled') $("buyStatus").innerHTML="<span class='warn'>Checkout cancelled.</span>";
 
 renderThemes(); renderPricing(); loadDraft(); refreshDecks(); setStep(1);
 </script>

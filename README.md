@@ -28,6 +28,11 @@ Open: `http://localhost:3000`
   - Start: `npm start`
   - Health: `/api/health`
 
+### Stripe env vars (next step)
+Set these in Render service environment:
+- `APP_URL` = your Render URL (e.g. `https://cards-against-reality-app.onrender.com`)
+- `STRIPE_SECRET_KEY` = Stripe test secret key (`sk_test_...`)
+
 ## Notes
 - Data stored in `data/decks.json` in this phase (ephemeral on free instances)
 - This is the migration checkpoint before Stripe integration

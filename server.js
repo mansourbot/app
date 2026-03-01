@@ -2,10 +2,15 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 
+const Stripe = require('stripe');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_DIR = path.join(__dirname, 'data');
 const DB_PATH = path.join(DATA_DIR, 'decks.json');
+const APP_URL = process.env.APP_URL || `http://localhost:${PORT}`;
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
+const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(__dirname));
@@ -84,6 +89,52 @@ app.delete('/api/decks/:id', (req, res) => {
 
   writeDb(db);
   res.json({ ok: true });
+});
+
+app.post('/api/checkout/session', async (req, res) => {
+  try {
+    if (!stripe) {
+      return res.status(400).json({ error: 'Stripe not configured on server' });
+    }
+
+    const { packageId, packageName, amountUsd, email } = req.body || {};
+    if (!packageId || !packageName || !amountUsd) {
+      return res.status(400).json({ error: 'packageId, packageName, amountUsd are required' });
+    }
+
+    const amount = Number(amountUsd);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return res.status(400).json({ error: 'invalid amountUsd' });
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      customer_email: email || undefined,
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `Cards Against Reality — ${packageName}`
+            },
+            unit_amount: Math.round(amount * 100)
+          }
+        }
+      ],
+      metadata: {
+        packageId,
+        packageName
+      },
+      success_url: `${APP_URL}/?checkout=success`,
+      cancel_url: `${APP_URL}/?checkout=cancelled`
+    });
+
+    res.json({ url: session.url, id: session.id });
+  } catch (err) {
+    console.error('checkout_session_error', err);
+    res.status(500).json({ error: 'could_not_create_checkout_session' });
+  }
 });
 
 app.get('*', (_req, res) => {
