@@ -192,7 +192,13 @@ app.get('*', (_req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.listen(PORT, () => {
-  ensureDb();
-  console.log(`CAR app running on http://localhost:${PORT}`);
-});
+// Vercel serverless handler export
+module.exports = app;
+
+// Local/dev runtime
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    ensureDb();
+    console.log(`CAR app running on http://localhost:${PORT}`);
+  });
+}
