@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cards Against Reality — Pack Design Studio</title>
+  <title>Cards Against Reality — Build a Custom Pack in Minutes</title>
   <style>
     :root{--bg:#0f0f13;--panel:#1a1b26;--muted:#9ca1b3;--text:#f7f8ff;--acc:#7c5cff;--good:#1ec987;--warn:#ffb020;--bad:#ff6b6b}
     *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text)}
@@ -23,39 +23,39 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>Cards Against Reality — Pack Design Studio</h1>
-  <div class="muted">Flow: <span class="step" id="s1">1 Brief</span><span class="step" id="s2">2 Theme</span><span class="step" id="s3">3 Cards</span><span class="step" id="s4">4 Review</span><span class="step" id="s5">5 Export</span></div>
+  <h1>Cards Against Reality — Custom Pack Builder</h1>
+  <div class="muted">Go from inside jokes to a gift-ready pack in 5 steps: <span class="step" id="s1">1 Brief</span><span class="step" id="s2">2 Theme</span><span class="step" id="s3">3 Cards</span><span class="step" id="s4">4 Edit</span><span class="step" id="s5">5 Export</span></div>
 
   <div class="panel" id="libraryPanel">
-    <h3>Deck Library (Home)</h3>
-    <div class="muted">All saved decks in one place. Load, export PDF/JSON, and capture sale intent from here.</div>
+    <h3>Pack Library</h3>
+    <div class="muted">Your saved packs, ready to reopen, refine, and export.</div>
     <div class="row" style="margin-top:8px">
-      <button id="saveDeck" class="good">Save Current Deck to Library</button>
+      <button id="saveDeck" class="good">Save Pack to Library</button>
       <button id="clearDecks">Clear Library</button>
     </div>
     <div id="deckLibrary" class="grid g3" style="margin-top:10px"></div>
   </div>
 
   <div class="panel" id="step1">
-    <h3>1) Brief</h3>
+    <h3>1) Pack Brief</h3>
     <div class="grid g2">
-      <div><label class="muted">Pack name</label><input id="packName" value="Hank vs Pat Holiday Roast"></div>
+      <div><label class="muted">Pack name</label><input id="packName" value="Hank vs Pat Holiday Roast" placeholder="e.g. Pat & Hank Anniversary Chaos"></div>
       <div><label class="muted">Occasion</label><select id="occasion"><option>Holiday</option><option>Birthday</option><option>Wedding</option><option>Office Party</option></select></div>
       <div><label class="muted">Tone</label><select id="tone"><option>Balanced</option><option>Savage</option><option>Unhinged</option><option>Wholesome</option></select></div>
       <div><label class="muted">Pack size</label><select id="size"><option value="mini">Mini (20+60)</option><option value="standard" selected>Standard (30+90)</option><option value="deluxe">Deluxe (40+120)</option></select></div>
     </div>
-    <div style="margin-top:8px"><label class="muted">Lore / inside jokes / people / places</label><textarea id="lore" placeholder="Give me the lore dump..."></textarea></div>
-    <div class="row" style="margin-top:10px"><button id="themeBtn" class="primary">Generate Theme Ideas</button><button id="saveDraft">Save Draft</button></div>
+    <div style="margin-top:8px"><label class="muted">Lore / inside jokes / people / places</label><textarea id="lore" placeholder="Drop names, stories, references, locations, recurring jokes..."></textarea></div>
+    <div class="row" style="margin-top:10px"><button id="themeBtn" class="primary">Generate Theme Options</button><button id="saveDraft">Save Draft</button></div>
   </div>
 
   <div class="panel" id="step2">
-    <h3>2) Theme</h3><div class="muted">Pick one theme direction.</div>
+    <h3>2) Theme</h3><div class="muted">Pick the vibe for this pack.</div>
     <div id="themes" class="grid g3" style="margin-top:8px"></div>
   </div>
 
   <div class="panel" id="step3">
-    <h3>3) Cards</h3>
-    <div class="row"><button id="genCards" class="primary">Generate Pack Cards</button><button id="regenBlack">Regenerate Black</button><button id="regenWhite">Regenerate White</button></div>
+    <h3>3) Generate Cards</h3>
+    <div class="row"><button id="genCards" class="primary">Generate Cards</button><button id="regenBlack">Regenerate Prompts</button><button id="regenWhite">Regenerate Responses</button></div>
     <div id="stats" class="muted" style="margin-top:8px">No cards generated yet.</div>
     <div id="quality" class="muted"></div>
     <div class="grid g2" style="margin-top:10px">
@@ -66,18 +66,18 @@
 
   <div class="panel" id="editorPanel">
     <h3>4) Review + Edit</h3>
-    <div id="editingMeta" class="muted">Select a card above to edit.</div>
+    <div id="editingMeta" class="muted">Click any card above to edit wording.</div>
     <textarea id="editingText"></textarea>
     <div class="row" style="margin-top:8px"><button id="rewriteFunny">Rewrite Funnier</button><button id="rewriteSavage">Make Savage</button><button id="rewriteSoft">Soften</button><button id="rewriteShort">Shorten</button><button id="saveEdit" class="good">Save</button></div>
   </div>
 
   <div class="panel" id="step5">
-    <h3>Pricing + Export</h3>
+    <h3>5) Pricing + Export</h3>
     <div class="grid g3" id="pricing"></div>
-    <div class="row" style="margin-top:10px"><input id="buyerEmail" placeholder="Email for purchase intent / delivery list" style="max-width:360px"><button id="buyBtn" class="primary">Select package above</button></div>
+    <div class="row" style="margin-top:10px"><input id="buyerEmail" placeholder="Email for checkout + delivery updates" style="max-width:360px"><button id="buyBtn" class="primary">Select a package above</button></div>
     <div id="buyStatus" class="muted" style="margin-top:8px"></div>
     <hr style="border-color:#ffffff1a; margin:14px 0;">
-    <div class="row"><button id="exportJson">Download JSON</button><button id="exportPrint" class="primary">Open Print/PDF View</button><button id="sessionSummary">Download Session Summary</button></div>
+    <div class="row"><button id="exportJson">Download JSON</button><button id="exportPrint" class="primary">Open Print / PDF View</button><button id="sessionSummary">Download Session Summary</button></div>
   </div>
 </div>
 <script>
@@ -94,7 +94,7 @@ const counts=()=>{const v=$("size").value;return v==='mini'?{b:20,w:60}:v==='del
 function setStep(n){['s1','s2','s3','s4','s5'].forEach((k,i)=>$(k).classList.toggle('active',i===n-1));}
 function currentMeta(){return{packName:$("packName").value,occasion:$("occasion").value,tone:$("tone").value,size:$("size").value,theme:selectedTheme}};
 
-function saveDraft(){ localStorage.setItem('car-studio-draft', JSON.stringify({meta:currentMeta(),lore:$("lore").value,pack,events})); track('draft_saved'); alert('Draft saved locally.'); }
+function saveDraft(){ localStorage.setItem('car-studio-draft', JSON.stringify({meta:currentMeta(),lore:$("lore").value,pack,events})); track('draft_saved'); alert('Draft saved on this device.'); }
 function loadDraft(){ try{ const d=JSON.parse(localStorage.getItem('car-studio-draft')||'null'); if(!d) return; const m=d.meta||{}; $("packName").value=m.packName||''; $("occasion").value=m.occasion||'Holiday'; $("tone").value=m.tone||'Balanced'; $("size").value=m.size||'standard'; $("lore").value=d.lore||''; selectedTheme=m.theme||null; pack=d.pack||{black:[],white:[]}; events=d.events||[]; renderPricing(); renderCards(); runChecks(); }catch{} }
 
 const OWNER_KEY='car-owner-id';
@@ -191,7 +191,7 @@ function openEdit(type,idx){ setStep(4); editing={type,idx}; $("editingMeta").te
 function xform(mode){ if(!editing) return; let t=$("editingText").value; if(mode==='funny') t += ' (everyone pretended this was normal)'; if(mode==='savage') t=t.replace(/friendship/gi,'friendship held together by mild threats').replace(/chaos/gi,'weaponized chaos'); if(mode==='soft') t=t.replace(/weaponized|threats|kill/gi,'unexpected'); if(mode==='short') t=t.split(' ').slice(0,12).join(' ')+'...'; $("editingText").value=t; track('rewrite_clicked',{mode}); }
 function saveEdit(){ if(!editing) return; pack[editing.type][editing.idx]=$("editingText").value.trim(); renderCards(); runChecks(); track('card_saved',editing); }
 function runChecks(){ const all=[...pack.black,...pack.white].map(x=>x.toLowerCase()); const dup=all.length-new Set(all).size; const mean=all.filter(t=>BAD.some(b=>t.includes(b))).length; const obscure=all.filter(t=>t.split(' ').length>18).length; const parts=[]; if(dup) parts.push(`<span class='warn'>${dup} duplicate-like</span>`); if(mean) parts.push(`<span class='bad'>${mean} too-mean flags</span>`); if(obscure) parts.push(`<span class='warn'>${obscure} too-obscure/long</span>`); if(!parts.length) parts.push(`<span class='ok'>Quality clean ✅</span>`); $("quality").innerHTML=parts.join(' • '); track('quality_checked',{dup,mean,obscure}); }
-function renderPricing(){ const s=$("size").value; const base=s==='mini'?14:s==='deluxe'?39:24; const options=[{id:'one',name:'1 Pack',price:base,desc:'Single gift'},{id:'three',name:'3-Pack',price:Math.round(base*3*0.85),desc:'~15% off',best:true},{id:'five',name:'5-Pack',price:Math.round(base*5*0.75),desc:'~25% off'}]; const host=$("pricing"); host.innerHTML=''; options.forEach(o=>{ const d=document.createElement('div'); d.className='card'+(o.best?' price-best':''); d.innerHTML=`<b>${o.name}</b><h2 style='margin:.2rem 0'>$${o.price}</h2><div class='muted small'>${o.desc}${o.best?' • best value':''}</div><button style='margin-top:8px'>Choose</button>`; d.querySelector('button').onclick=()=>{selectedPackage=o; [...host.children].forEach(x=>x.style.outline='none'); d.style.outline='2px solid #1ec987'; $("buyBtn").textContent=`Capture intent: ${o.name} ($${o.price})`; track('package_selected',o);}; host.appendChild(d);}); }
+function renderPricing(){ const s=$("size").value; const base=s==='mini'?14:s==='deluxe'?39:24; const options=[{id:'one',name:'1 Pack',price:base,desc:'Single gift'},{id:'three',name:'3-Pack',price:Math.round(base*3*0.85),desc:'~15% off',best:true},{id:'five',name:'5-Pack',price:Math.round(base*5*0.75),desc:'~25% off'}]; const host=$("pricing"); host.innerHTML=''; options.forEach(o=>{ const d=document.createElement('div'); d.className='card'+(o.best?' price-best':''); d.innerHTML=`<b>${o.name}</b><h2 style='margin:.2rem 0'>$${o.price}</h2><div class='muted small'>${o.desc}${o.best?' • best value':''}</div><button style='margin-top:8px'>Choose</button>`; d.querySelector('button').onclick=()=>{selectedPackage=o; [...host.children].forEach(x=>x.style.outline='none'); d.style.outline='2px solid #1ec987'; $("buyBtn").textContent=`Continue to checkout: ${o.name} ($${o.price})`; track('package_selected',o);}; host.appendChild(d);}); }
 async function captureIntent(){
   if(!selectedPackage) return alert('Select package first');
   const email=$("buyerEmail").value.trim();
