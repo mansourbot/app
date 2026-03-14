@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CAR Studio Console</title>
+  <style>
+    :root{--bg:#0f0f13;--panel:#1a1b26;--muted:#9ca1b3;--text:#f7f8ff;--acc:#7c5cff;--good:#1ec987;--line:#ffffff22}
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text)}
+    .wrap{max-width:1100px;margin:0 auto;padding:24px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+    .muted{color:var(--muted)} .row{display:flex;gap:10px;flex-wrap:wrap}.btn{padding:10px 14px;border-radius:10px;border:1px solid var(--line);text-decoration:none;color:var(--text);font-weight:700;display:inline-block}
+    .btn.primary{background:var(--acc)} .btn.good{background:var(--good);color:#072514}
+    .grid{display:grid;gap:10px;grid-template-columns:1fr}
+    @media(min-width:900px){.grid{grid-template-columns:repeat(3,1fr)}}
+    .card{padding:12px;border:1px solid var(--line);border-radius:12px;background:#12131c}
+    button{padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:#171822;color:var(--text);cursor:pointer}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="panel">
+      <h1 style="margin:0 0 6px">Pack Console</h1>
+      <div class="muted">See your packs, reopen/edit them, or start a fresh 5-step wizard.</div>
+      <div class="row" style="margin-top:12px">
+        <a class="btn primary" href="/studio/new">+ New Pack</a>
+        <a class="btn" href="/">Back to Landing</a>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3 style="margin-top:0">Your Packs</h3>
+      <div id="deckLibrary" class="grid"></div>
+    </div>
+  </div>
+
+<script>
+const $=id=>document.getElementById(id);
+const OWNER_KEY='car-owner-id';
+const ownerId=localStorage.getItem(OWNER_KEY)||(`owner-${Math.random().toString(36).slice(2,10)}`);
+localStorage.setItem(OWNER_KEY,ownerId);
+let cachedDecks=[];
+
+async function apiFetch(path, options={}){
+  const res=await fetch(path,{...options,headers:{'Content-Type':'application/json','x-owner-id':ownerId,...(options.headers||{})}});
+  if(!res.ok) throw new Error(`API ${res.status}`);
+  return res.json();
+}
+
+async function refreshDecks(){
+  try{
+    const out=await apiFetch('/api/decks');
+    cachedDecks=out.decks||[];
+  }catch{
+    try{ cachedDecks=JSON.parse(localStorage.getItem('car-deck-library')||'[]'); }catch{ cachedDecks=[]; }
+  }
+  renderDeckLibrary();
+}
+
+async function deleteDeck(id){
+  if(!confirm('Delete this pack?')) return;
+  try{ await apiFetch(`/api/decks/${id}`,{method:'DELETE'}); }
+  catch{ cachedDecks=cachedDecks.filter(d=>d.id!==id); localStorage.setItem('car-deck-library',JSON.stringify(cachedDecks)); }
+  await refreshDecks();
+}
+
+function renderDeckLibrary(){
+  const host=$('deckLibrary'); host.innerHTML='';
+  if(!cachedDecks.length){ host.innerHTML="<div class='muted'>No packs yet. Hit <b>+ New Pack</b> to create your first one.</div>"; return; }
+  cachedDecks.forEach(d=>{
+    const c=document.createElement('div'); c.className='card';
+    const name=d.meta?.packName||'Untitled deck';
+    const theme=d.meta?.theme?.name||'No theme';
+    const black=d.cards?.black?.length||0, white=d.cards?.white?.length||0;
+    c.innerHTML=`<b>${name}</b><div class='muted' style='font-size:13px;margin:6px 0'>${theme} • ${black} black + ${white} white</div><div class='muted' style='font-size:12px'>${new Date(d.createdAt||Date.now()).toLocaleString()}</div><div class='row' style='margin-top:10px'><a class='btn' href='/studio/new?deck=${encodeURIComponent(d.id)}'>Open</a><button data-a='del'>Delete</button></div>`;
+    c.querySelector("[data-a='del']").onclick=()=>deleteDeck(d.id);
+    host.appendChild(c);
+  });
+}
+
+refreshDecks();
+</script>
+</body>
+</html>

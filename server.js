@@ -189,6 +189,10 @@ app.post('/api/generate', (req, res) => {
 });
 
 app.get('/studio', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'console.html'));
+});
+
+app.get('/studio/new', (_req, res) => {
   res.sendFile(path.join(__dirname, 'studio.html'));
 });
 
