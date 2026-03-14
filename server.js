@@ -188,6 +188,10 @@ app.post('/api/generate', (req, res) => {
   res.json({ black, white });
 });
 
+app.get('/studio', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'studio.html'));
+});
+
 app.get('*', (_req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
